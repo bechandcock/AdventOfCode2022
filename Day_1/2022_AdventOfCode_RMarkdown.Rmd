@@ -1,0 +1,67 @@
+---
+title: "2022_AdventOfCode_RMarkdown"
+output: html_document
+date: "2022-12-01"
+---
+
+## Functions
+
+```{r}
+check_packages <- function(package_list){
+  ### ------ Check that the required packages are loaded 
+  ### accepts list such as c('dplyr', 'readr')
+  for(p in package_list){
+    if(!require(p,character.only = TRUE)) install.packages(p)
+    library(p,character.only = TRUE) }
+  }
+```
+
+## DAY 1
+
+[Advent of Code Day 1](https://adventofcode.com/2022/day/1)
+
+```{r}
+# Read in libraries and packages
+check_packages(c('readr', 'dplyr'))
+
+# Import data file
+# read.csv from utils package uses the header arguemnt 
+# and read_csv from readr package uses col_names.
+
+df <- read_csv("/cloud/project/2022_AdventOfCode/day1_input.txt", skip_empty_rows	
+= FALSE, col_names = c('food'))
+```
+
+```{r}
+
+# Add an empty column to store the elf names
+df2 <- cbind(df, 'elf' = NA)
+
+# Add Elf name groupings as a new column
+this_elf = 1
+for(i in 1:nrow(df2)) {       # for-loop over rows
+  if (is.na(df2[i,'food'])) {
+    this_elf = this_elf + 1
+    } else {
+    df2[i,'elf'] <- paste("Elf", this_elf)
+    }
+ } # end for loop
+
+# Now group the data using dplyr and tidy up
+df3 = df2 %>% na.omit()
+
+df3_grouped <- df2  %>% group_by(elf) %>% 
+   summarise(elf_food=sum(food)) %>% 
+   na.omit() 
+
+df4_tidy <- arrange(df3_grouped, desc(elf_food))
+
+# Add a cumulative column
+df5_hungry <- df4_tidy %>% mutate(combined_food = cumsum(elf_food))
+
+# tidy up and print output
+print(paste("The most food is",df5_hungry[1,'elf_food'], "calories carried by", df5_hungry[1,'elf']))
+
+print(paste("The top 3 elves carry",sum(df5_hungry[3,'combined_food']), "calories between them"))
+
+```
