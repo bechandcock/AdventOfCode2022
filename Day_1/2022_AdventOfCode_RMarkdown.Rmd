@@ -21,19 +21,15 @@ check_packages <- function(package_list){
 [Advent of Code Day 1](https://adventofcode.com/2022/day/1)
 
 ```{r}
-# Read in libraries and packages
+# Read in libraries and packages using function
 check_packages(c('readr', 'dplyr'))
 
 # Import data file
-# read.csv from utils package uses the header arguemnt 
-# and read_csv from readr package uses col_names.
-
 df <- read_csv("/cloud/project/2022_AdventOfCode/day1_input.txt", skip_empty_rows	
 = FALSE, col_names = c('food'))
 ```
 
 ```{r}
-
 # Add an empty column to store the elf names
 df2 <- cbind(df, 'elf' = NA)
 
@@ -56,12 +52,10 @@ df3_grouped <- df2  %>% group_by(elf) %>%
 
 df4_tidy <- arrange(df3_grouped, desc(elf_food))
 
+print(paste("The most food is",df5_hungry[1,'elf_food'], "calories carried by", df5_hungry[1,'elf']))
+
 # Add a cumulative column
 df5_hungry <- df4_tidy %>% mutate(combined_food = cumsum(elf_food))
 
-# tidy up and print output
-print(paste("The most food is",df5_hungry[1,'elf_food'], "calories carried by", df5_hungry[1,'elf']))
-
 print(paste("The top 3 elves carry",sum(df5_hungry[3,'combined_food']), "calories between them"))
-
 ```
