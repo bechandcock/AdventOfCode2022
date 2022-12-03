@@ -1,0 +1,161 @@
+---
+title: "2022_AdventOfCode_RMarkdown - DAY 2"
+output: html_document
+date: "2022-12-02"
+---
+
+## Functions
+
+```{r}
+check_packages <- function(package_list){
+  ### ------ Check that the required packages are loaded 
+  ### accepts list such as c('dplyr', 'readr')
+  for(p in package_list){
+    if(!require(p,character.only = TRUE)) install.packages(p)
+    library(p,character.only = TRUE) }
+  }
+```
+
+## DAY 2
+
+[Advent of Code Day 2](https://adventofcode.com/2022/day/2)
+
+```{r}
+# Read in libraries and packages using function
+# https://tidyr.tidyverse.org/reference/
+
+check_packages(c('readr', 'stringr', 'dplyr', 'tidyr'))
+
+# Import data file
+df_part1 <- read_delim("/cloud/project/2022_AdventOfCode/day2_input.txt", delim = " ", skip_empty_rows	
+= FALSE, col_names = c('raw_elf', 'raw_human'))
+
+df_part2 <- df_part1
+
+```
+
+```{r}
+# ##### PART 1 
+
+# Create 2 tables with the the score for the moves and join it with our moves
+# 1 for Rock, 2 for Paper, and 3 for Scissors
+# "Elf: A for Rock, B for Paper, and C for Scissors. 
+# Human: X for Rock, Y for Paper, and Z for Scissors.
+
+df_move_scores_elf <- data.frame (
+     raw_elf  = c("A", "B", "C"),
+     move_elf  = c("rock", "paper", "scissors"),
+     move_score_elf = c(1, 2, 3)
+     )
+df_move_scores_human <- data.frame (
+     raw_human  = c("X", "Y", "Z"),
+     move_human  = c("rock", "paper", "scissors"),
+     move_score_human = c(1, 2, 3)
+     )
+
+df_part1 <- left_join(df_part1, df_move_scores_elf, by = "raw_elf")
+df_part1 <- left_join(df_part1, df_move_scores_human, by = "raw_human")
+
+# Add a column with concatenated moves
+df_part1 <- df_part1 %>% unite("move_both", c('move_elf', 'move_human'), remove = FALSE)
+```
+
+```{r}
+# ##### PART 1 & 2
+
+# Assign scores for game outcomes
+# Create a tables with the the score for the moves
+# 0 if you lost, 3 if the round was a draw, and 6 if you won
+# Rock defeats Scissors, Scissors defeats Paper, Paper defeats Rock.
+# If both players choose the same shape, the round instead ends in a draw.
+
+df_outcome_scores <- data.frame (
+     move_both  = c("rock_rock", "paper_paper", "scissors_scissors", 
+                    "rock_paper", "rock_scissors",
+                    "paper_rock", "paper_scissors",
+                    "scissors_rock", "scissors_paper"),
+     outcome  = c("draw", "draw", "draw", 
+                    "human_wins", "elf_wins",
+                    "elf_wins", "human_wins",
+                    "human_wins", "elf_wins"),
+     outcome_score_elf  = c(3, 3, 3,
+                    0, 6,
+                    6, 0,
+                    0, 6),
+     outcome_score_human = c(3, 3, 3,
+                     6, 0,
+                     0, 6,
+                     6, 0)
+     )
+  
+```
+
+```{r}
+# ##### PART 1 - RESULTS
+
+df_part1 <- left_join(df_part1, df_outcome_scores, by = "move_both")
+
+# Add the scores together
+df_part1$total_score_elf   <- df_part1$move_score_elf   + df_part1$outcome_score_elf
+df_part1$total_score_human <- df_part1$move_score_human + df_part1$outcome_score_human
+
+print(paste("The Elf has a PART 1 combined score of",sum(df_part1$total_score_elf)))
+print(paste("The Human has a PART 1 combined score of",sum(df_part1$total_score_human)))
+
+
+```
+
+```{r}
+# ##### PART 2 
+
+# X means you need to lose, 
+# Y means you need to end the round in a draw, and 
+# Z means you need to win. Good luck!"
+
+# Create 2 tables with the the score for the moves and join it with our moves
+# 1 for Rock, 2 for Paper, and 3 for Scissors
+# "Elf: A for Rock, B for Paper, and C for Scissors. 
+# Human: X for Rock, Y for Paper, and Z for Scissors.
+
+# Add a column with concatenated RAW moves
+df_part2 <- df_part2 %>% unite("move_both_raw", c('raw_elf', 'raw_human'), remove = FALSE)
+
+df_move_scores_elf <- data.frame (
+     raw_elf  = c("A", "B", "C"),
+     move_elf  = c("rock", "paper", "scissors"),
+     move_score_elf = c(1, 2, 3)
+     )
+df_move_scores_human <- data.frame (
+     move_both_raw  = c("A_X", "B_X", "C_X", 
+                        "A_Y", "B_Y", "C_Y", 
+                        "A_Z", "B_Z", "C_Z"),
+     move_human  = c("scissors", "rock", "paper",
+                     "rock", "paper", "scissors",
+                     "paper", "scissors", "rock"),
+     move_score_human = c(3, 1, 2,
+                          1, 2, 3,
+                          2, 3, 1)
+     )
+
+df_part2 <- left_join(df_part2, df_move_scores_elf,   by = "raw_elf")
+df_part2 <- left_join(df_part2, df_move_scores_human, by = "move_both_raw")
+
+# Add a column with concatenated moves
+df_part2 <- df_part2 %>% unite("move_both", c('move_elf', 'move_human'), remove = FALSE)
+```
+
+
+```{r}
+# ##### PART 2 - RESULTS
+
+df_part2 <- left_join(df_part2, df_outcome_scores, by = "move_both")
+
+# Add the scores together
+df_part2$total_score_elf   <- df_part2$move_score_elf   + df_part2$outcome_score_elf
+df_part2$total_score_human <- df_part2$move_score_human + df_part2$outcome_score_human
+
+print(paste("The Elf has a PART 2 combined score of",sum(df_part2$total_score_elf)))
+print(paste("The Human has a PART 2 combined score of",sum(df_part2$total_score_human)))
+
+
+```
