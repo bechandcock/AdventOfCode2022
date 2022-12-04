@@ -1,0 +1,109 @@
+---
+title: "2022_AdventOfCode_RMarkdown - DAY 3"
+output: html_document
+date: "2022-12-02"
+---
+
+## DAY 3
+
+[Advent of Code Day 3](https://adventofcode.com/2022/day/3)
+
+## Functions
+
+```{r}
+check_packages <- function(package_list){
+  ### ------ Check that the required packages are loaded 
+  ### accepts list such as c('dplyr', 'readr')
+  for(p in package_list){
+    if(!require(p,character.only = TRUE)) install.packages(p)
+    library(p,character.only = TRUE) }
+  }
+```
+
+## Importing data - Both parts
+
+```{r}
+# Read in libraries and packages using function
+# https://tidyr.tidyverse.org/reference/
+
+#rm(list=ls())
+check_packages(c('readr', 'stringr', 'dplyr', 'tidyr', 'utils'))
+
+# Import data file
+df_part1 <- read_csv("/cloud/project/2022_AdventOfCode/day3_input.txt", col_names = c('raw'))
+df_part2 <- df_part1
+
+# Split each line in half
+df_part1$raw_A <- substring(df_part1$raw, 1, nchar(df_part1$raw)/2)
+df_part1$raw_B <- substring(df_part1$raw, (nchar(df_part1$raw)/2)+1, nchar(df_part1$raw))
+
+```
+
+```{r}
+# ##### PART 1 
+
+# see which characters are duplicated in both string parts
+
+for(i in 1:nrow(df_part1)) {       # for-loop over rows
+  A <- unique(strsplit(df_part1$raw_A[i], "")[[1]])
+  B <- unique(strsplit(df_part1$raw_B[i], "")[[1]])
+  df_part1$dup_letter[i] <- A[A %in% B]
+ } # end for loop
+
+
+# Assign priority by creating a table and joining
+# Lowercase item types a through z have priorities 1 through 26.
+# Uppercase item types A through Z have priorities 27 through 52.
+
+df_priority_score <- data.frame (
+     dup_letter = c(letters, LETTERS),
+     priority = 1:52
+     )
+
+df_part1 <- left_join(df_part1, df_priority_score, by = "dup_letter")
+
+# ##### PART 1 - RESULTS
+print(paste("PART 2:The duplicated items have a combined score of",sum(df_part1$priority)))
+
+```
+
+
+
+```{r}
+# ##### PART 2 
+
+# Create groups and concatenate text
+this_position <- 1
+
+for(i in 1:nrow(df_part2)) {       # for-loop over rows
+  df_part2$position[i] <- this_position
+
+  df_part2$elf_group[i] <- floor((i - 1) / 3) + 1
+
+  if (this_position == 3) {this_position <- 1} 
+    else {this_position <- this_position + 1}
+    
+ } # end for loop
+
+# Put each group's packs into seperate columns
+
+df_part2 <- spread(df_part2, position, raw)
+colnames(df_part2) <- c('elf_group', 'elf_A', 'elf_B', 'elf_C')
+
+# see which characters are duplicated in both string parts
+
+for(i in 1:nrow(df_part2)) {       # for-loop over rows
+  A <- unique(strsplit(df_part2$elf_A[i], "")[[1]])
+  B <- unique(strsplit(df_part2$elf_B[i], "")[[1]])
+  C <- unique(strsplit(df_part2$elf_C[i], "")[[1]])
+  df_part2$dup_letter[i] <- C[C %in% A[A %in% B]]
+ } # end for loop
+
+# Assign priority by using the table created earlier and joining
+
+df_part2 <- left_join(df_part2, df_priority_score, by = "dup_letter")
+
+# ##### PART 1 - RESULTS
+print(paste("PART 2: The duplicated items for the Elf groupshave a combined score of",sum(df_part2$priority)))
+
+```
